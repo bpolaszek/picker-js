@@ -1,11 +1,22 @@
 import {EmptyPickerError} from './errors'
-import {IPicker, PickerOptions, Weight} from './types'
+import {IPicker, PickerOptions, Weight, isWeakKeyable} from './types'
 
-export class Picker<T extends Object> implements IPicker<T> {
+export class Picker<T> implements IPicker<T> {
   private items: T[]
   private options: PickerOptions<T>
 
   constructor(items: T[], options: PickerOptions<T>) {
+    // Validate that we're using the correct Map type for the value type
+    if (items.length > 0) {
+      const firstItem = items[0]
+      const usingWeakMap = options.weights instanceof WeakMap
+      const shouldUseWeakMap = isWeakKeyable(firstItem)
+
+      if (usingWeakMap !== shouldUseWeakMap) {
+        throw new Error(shouldUseWeakMap ? 'Must use WeakMap for object values' : 'Must use Map for scalar values')
+      }
+    }
+
     this.items = [...items] // Create a copy to avoid modifying the original array
     this.options = options
   }
