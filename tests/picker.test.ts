@@ -6,124 +6,311 @@ interface TestItem {
 }
 
 describe('Picker', () => {
-  let items: TestItem[];
-  let weights: WeakMap<TestItem, number>;
+  describe('with objects', () => {
+    let items: TestItem[];
 
-  beforeEach(() => {
-    items = [
-      { name: 'Common' },
-      { name: 'Rare' },
-      { name: 'Epic' },
-      { name: 'Legendary' }
-    ];
-    
-    weights = new WeakMap();
-    weights.set(items[0], 100); // Common: very high weight
-    weights.set(items[1], 50);  // Rare: high weight
-    weights.set(items[2], 20);  // Epic: medium weight
-    weights.set(items[3], 5);   // Legendary: low weight
+    beforeEach(() => {
+      items = [
+        { name: 'Common' },
+        { name: 'Rare' },
+        { name: 'Epic' },
+        { name: 'Legendary' }
+      ];
+    });
+
+    describe('constructor', () => {
+      it('should create a new instance with array weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [items[0], 100],
+            [items[1], 50],
+            [items[2], 20],
+            [items[3], 5]
+          ]
+        });
+        expect(picker).toBeInstanceOf(Picker);
+      });
+
+      it('should create a new instance without weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1
+        });
+        expect(picker).toBeInstanceOf(Picker);
+      });
+    });
+
+    describe('pick', () => {
+      it('should return an item from the list', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [items[0], 100],
+            [items[1], 50],
+            [items[2], 20],
+            [items[3], 5]
+          ]
+        });
+        const picked = picker.pick();
+        expect(items).toContain(picked);
+      });
+
+      it('should throw EmptyPickerError when list is empty and errorIfEmpty is true', () => {
+        const picker = new Picker([], {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1
+        });
+        expect(() => picker.pick()).toThrow(EmptyPickerError);
+      });
+
+      it('should remove item when shift is true', () => {
+        const picker = new Picker([...items], {
+          shift: true,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [items[0], 100],
+            [items[1], 50],
+            [items[2], 20],
+            [items[3], 5]
+          ]
+        });
+
+        const initialLength = items.length;
+        picker.pick();
+
+        // We need to pick again to verify the item was removed
+        const remainingItems = new Set();
+        for (let i = 0; i < initialLength - 1; i++) {
+          remainingItems.add(picker.pick());
+        }
+
+        expect(remainingItems.size).toBe(initialLength - 1);
+      });
+
+      it('should respect weights in probability distribution with provided weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [items[0], 100],
+            [items[1], 50],
+            [items[2], 20],
+            [items[3], 5]
+          ]
+        });
+
+        const results = new Map<string, number>();
+        const iterations = 10000;
+
+        // Perform many picks to test probability distribution
+        for (let i = 0; i < iterations; i++) {
+          const picked = picker.pick();
+          results.set(picked.name, (results.get(picked.name) || 0) + 1);
+        }
+
+        // Common item should be picked more often than Legendary
+        expect(results.get('Common')! > results.get('Legendary')!).toBe(true);
+        expect(results.get('Rare')! > results.get('Epic')!).toBe(true);
+      });
+
+      it('should allow setting weights after initialization', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1
+        });
+
+        // Set weights using method chaining
+        picker
+          .setWeight(items[0], 100)
+          .setWeight(items[1], 50)
+          .setWeight(items[2], 20)
+          .setWeight(items[3], 5);
+
+        const results = new Map<string, number>();
+        const iterations = 10000;
+
+        for (let i = 0; i < iterations; i++) {
+          const picked = picker.pick();
+          results.set(picked.name, (results.get(picked.name) || 0) + 1);
+        }
+
+        // Common item should be picked more often than Legendary
+        expect(results.get('Common')! > results.get('Legendary')!).toBe(true);
+        expect(results.get('Rare')! > results.get('Epic')!).toBe(true);
+      });
+    });
   });
 
-  describe('constructor', () => {
-    it('should create a new instance with provided items and options', () => {
-      const picker = new Picker(items, {
-        shift: false,
-        errorIfEmpty: true,
-        defaultWeight: 1,
-        weights
-      });
-      expect(picker).toBeInstanceOf(Picker);
-    });
-  });
+  describe('with scalars', () => {
+    let items: number[];
 
-  describe('pick', () => {
-    it('should return an item from the list', () => {
-      const picker = new Picker(items, {
-        shift: false,
-        errorIfEmpty: true,
-        defaultWeight: 1,
-        weights
-      });
-      const picked = picker.pick();
-      expect(items).toContain(picked);
+    beforeEach(() => {
+      items = [1, 2, 3, 4];
     });
 
-    it('should throw EmptyPickerError when list is empty and errorIfEmpty is true', () => {
-      const picker = new Picker([], {
-        shift: false,
-        errorIfEmpty: true,
-        defaultWeight: 1,
-        weights: new WeakMap()
+    describe('constructor', () => {
+      it('should create a new instance with array weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [1, 100],
+            [2, 50],
+            [3, 20],
+            [4, 5]
+          ]
+        });
+        expect(picker).toBeInstanceOf(Picker);
       });
-      expect(() => picker.pick()).toThrow(EmptyPickerError);
+
+      it('should create a new instance with record weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: {
+            1: 100,
+            2: 50,
+            3: 20,
+            4: 5
+          }
+        });
+        expect(picker).toBeInstanceOf(Picker);
+      });
     });
 
-    it('should remove item when shift is true', () => {
-      const picker = new Picker([...items], {
-        shift: true,
-        errorIfEmpty: true,
-        defaultWeight: 1,
-        weights
-      });
-
-      const initialLength = items.length;
-      picker.pick();
-      
-      // We need to pick again to verify the item was removed
-      const remainingItems = new Set();
-      for (let i = 0; i < initialLength - 1; i++) {
-        remainingItems.add(picker.pick());
-      }
-      
-      expect(remainingItems.size).toBe(initialLength - 1);
-    });
-
-    it('should respect weights in probability distribution', () => {
-      const picker = new Picker(items, {
-        shift: false,
-        errorIfEmpty: true,
-        defaultWeight: 1,
-        weights
-      });
-
-      const results = new Map<string, number>();
-      const iterations = 10000;
-
-      // Perform many picks to test probability distribution
-      for (let i = 0; i < iterations; i++) {
+    describe('pick', () => {
+      it('should return an item from the list', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [1, 100],
+            [2, 50],
+            [3, 20],
+            [4, 5]
+          ]
+        });
         const picked = picker.pick();
-        results.set(picked.name, (results.get(picked.name) || 0) + 1);
-      }
-
-      // Common item should be picked more often than Legendary
-      expect(results.get('Common')! > results.get('Legendary')!).toBe(true);
-      expect(results.get('Rare')! > results.get('Epic')!).toBe(true);
-    });
-
-    it('should use defaultWeight when no weight is specified', () => {
-      const defaultWeight = 1;
-      const picker = new Picker(items, {
-        shift: false,
-        errorIfEmpty: true,
-        defaultWeight,
-        weights: new WeakMap() // Empty weights map
+        expect(items).toContain(picked);
       });
 
-      const results = new Map<string, number>();
-      const iterations = 1000;
+      it('should remove item when shift is true', () => {
+        const picker = new Picker([...items], {
+          shift: true,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [1, 100],
+            [2, 50],
+            [3, 20],
+            [4, 5]
+          ]
+        });
 
-      for (let i = 0; i < iterations; i++) {
-        const picked = picker.pick();
-        results.set(picked.name, (results.get(picked.name) || 0) + 1);
-      }
+        const initialLength = items.length;
+        picker.pick();
 
-      // With equal weights, distribution should be roughly even
-      const counts = Array.from(results.values());
-      const average = counts.reduce((a, b) => a + b) / counts.length;
-      const tolerance = iterations * 0.1; // 10% tolerance
+        // We need to pick again to verify the item was removed
+        const remainingItems = new Set();
+        for (let i = 0; i < initialLength - 1; i++) {
+          remainingItems.add(picker.pick());
+        }
 
-      counts.forEach(count => {
-        expect(Math.abs(count - average)).toBeLessThan(tolerance);
+        expect(remainingItems.size).toBe(initialLength - 1);
+      });
+
+      it('should respect weights in probability distribution with array weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: [
+            [1, 100],
+            [2, 50],
+            [3, 20],
+            [4, 5]
+          ]
+        });
+
+        const results = new Map<number, number>();
+        const iterations = 10000;
+
+        // Perform many picks to test probability distribution
+        for (let i = 0; i < iterations; i++) {
+          const picked = picker.pick();
+          results.set(picked, (results.get(picked) || 0) + 1);
+        }
+
+        // Higher weighted items should be picked more often
+        expect(results.get(1)! > results.get(4)!).toBe(true);
+        expect(results.get(2)! > results.get(3)!).toBe(true);
+      });
+
+      it('should respect weights in probability distribution with record weights', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1,
+          weights: {
+            1: 100,
+            2: 50,
+            3: 20,
+            4: 5
+          }
+        });
+
+        const results = new Map<number, number>();
+        const iterations = 10000;
+
+        // Perform many picks to test probability distribution
+        for (let i = 0; i < iterations; i++) {
+          const picked = picker.pick();
+          results.set(picked, (results.get(picked) || 0) + 1);
+        }
+
+        // Higher weighted items should be picked more often
+        expect(results.get(1)! > results.get(4)!).toBe(true);
+        expect(results.get(2)! > results.get(3)!).toBe(true);
+      });
+
+      it('should allow setting weights after initialization', () => {
+        const picker = new Picker(items, {
+          shift: false,
+          errorIfEmpty: true,
+          defaultWeight: 1
+        });
+
+        // Set weights using method chaining
+        picker
+          .setWeight(1, 100)
+          .setWeight(2, 50)
+          .setWeight(3, 20)
+          .setWeight(4, 5);
+
+        const results = new Map<number, number>();
+        const iterations = 10000;
+
+        for (let i = 0; i < iterations; i++) {
+          const picked = picker.pick();
+          results.set(picked, (results.get(picked) || 0) + 1);
+        }
+
+        // Higher weighted items should be picked more often
+        expect(results.get(1)! > results.get(4)!).toBe(true);
+        expect(results.get(2)! > results.get(3)!).toBe(true);
       });
     });
   });
