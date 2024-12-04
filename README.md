@@ -20,9 +20,19 @@ npm install bentools-picker
 
 ## Usage
 
+### Basic Usage
+
 ```typescript
 import { Picker } from 'bentools-picker';
 
+// Create a picker with default options
+const picker = new Picker(['A', 'B', 'C']);
+const item = picker.pick(); // Random item with equal weights
+```
+
+### With Weights
+
+```typescript
 interface Item {
   name: string;
 }
@@ -34,18 +44,8 @@ const items = [
   { name: 'Legendary' }
 ];
 
-const names = [
-    'Common',
-    'Rare',
-    'Epic',
-    'Legendary',
-];
-
 // Method 1: Using array of tuples
-const picker1 = new Picker(items, {
-  shift: false,
-  errorIfEmpty: true,
-  defaultWeight: 1,
+const picker = new Picker(items, {
   weights: [
     [items[0], 100],  // Common: very high chance
     [items[1], 50],   // Rare: high chance
@@ -54,63 +54,84 @@ const picker1 = new Picker(items, {
   ]
 });
 
-// Method 2: Using a record object (only works with scalars)
-const picker2 = new Picker(names, {
-  shift: false,
-  errorIfEmpty: true,
-  defaultWeight: 1,
+// Method 2: Using a record object (only for scalar values)
+const namePicker = new Picker(['Common', 'Rare', 'Epic', 'Legendary'], {
   weights: {
-    'Common': 100,  // Common: very high chance
-    'Rare': 50,   // Rare: high chance
-    'Epic': 20,   // Epic: medium chance
-    'Legendary': 5     // Legendary: low chance
+    'Common': 100,
+    'Rare': 50,
+    'Epic': 20,
+    'Legendary': 5
   }
 });
 
 // Method 3: Set weights after initialization
-const picker3 = new Picker(items, {
-  shift: false,
-  errorIfEmpty: true,
-  defaultWeight: 1
-})
+const chainedPicker = new Picker(items)
   .setWeight(items[0], 100)
   .setWeight(items[1], 50)
   .setWeight(items[2], 20)
   .setWeight(items[3], 5);
-
-// Pick a random item
-const picked = picker3.pick();
-console.log(picked.name); // Outputs a random item name based on weights
 ```
 
 ### With Item Removal
 
 ```typescript
-const consumablePicker = new Picker(items, {
-  shift: true,            // Remove items after picking
-  errorIfEmpty: true,     // Throw error when all items are consumed
-  defaultWeight: 1,
-  weights: [
-    [1, 100],  // Very high chance
-    [2, 50],   // High chance
-    [3, 20],   // Medium chance
-    [4, 5]     // Low chance
-  ]
-});
+// Create a picker that removes items after picking
+const consumablePicker = new Picker(items, { shift: true });
 
 // Each pick removes the item from the pool
 while (true) {
   try {
     const item = consumablePicker.pick();
-    console.log(`Got: ${item}`);
-  } catch (error) {
-    if (error instanceof EmptyPickerError) {
-      console.log('No more items to pick!');
+    console.log(item.name);
+  } catch (e) {
+    if (e.name === 'EmptyPickerError') {
+      console.log('No more items!');
       break;
     }
-    throw error;
+    throw e;
   }
 }
+```
+
+## Configuration Options
+
+All options are optional with sensible defaults:
+
+```typescript
+interface PickerOptions<T> {
+  // Remove items after picking (default: false)
+  shift?: boolean;
+  
+  // Throw error when picking from empty pool (default: true)
+  errorIfEmpty?: boolean;
+  
+  // Default weight for items without specific weight (default: 1)
+  defaultWeight?: number;
+  
+  // Optional weight definitions
+  weights?: Array<[T, number]> | Record<string | number, number>;
+}
+```
+
+## Type Safety
+
+The picker is fully type-safe:
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+}
+
+const users: User[] = [
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' }
+];
+
+// TypeScript knows the picked item is of type User
+const picker = new Picker(users);
+const user = picker.pick(); // type: User
+console.log(user.name); // TypeScript knows .name exists
 ```
 
 ## API Reference

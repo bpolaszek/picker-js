@@ -1,14 +1,21 @@
 import {EmptyPickerError} from './errors'
-import {IPicker, PickerOptions, Weight, isWeakKeyable} from './types'
+import {IPicker, PickerOptions, PickerConstructorOptions, Weight, isWeakKeyable} from './types'
+
+const DEFAULT_OPTIONS: PickerOptions<any> = {
+  shift: false,
+  errorIfEmpty: true,
+  defaultWeight: 1,
+  weights: undefined,
+}
 
 export class Picker<T> implements IPicker<T> {
   private items: T[]
   private options: PickerOptions<T>
   private weights: WeakMap<object, Weight> | Map<T, Weight>
 
-  constructor(items: T[], options: PickerOptions<T>) {
+  constructor(items: T[], options: PickerConstructorOptions<T> = {}) {
     this.items = [...items] // Create a copy to avoid modifying the original array
-    this.options = options
+    this.options = {...DEFAULT_OPTIONS, ...options} as PickerOptions<T>
 
     // Initialize the appropriate Map type based on the first item
     const shouldUseWeakMap = items.length > 0 && isWeakKeyable(items[0])

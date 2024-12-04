@@ -30,6 +30,8 @@ export interface PickerOptions<T> {
   weights?: Weights<T>
 }
 
+export type PickerConstructorOptions<T> = Partial<PickerOptions<T>>
+
 export interface IPicker<T> {
   /** Pick a random item based on weights. Returns undefined if pool is empty and errorIfEmpty is false */
   pick(): T | undefined

@@ -1,7 +1,7 @@
 var c = Object.defineProperty;
-var a = (s, t, e) => t in s ? c(s, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : s[t] = e;
-var n = (s, t, e) => a(s, typeof t != "symbol" ? t + "" : t, e);
-class f extends Error {
+var f = (s, t, e) => t in s ? c(s, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : s[t] = e;
+var n = (s, t, e) => f(s, typeof t != "symbol" ? t + "" : t, e);
+class a extends Error {
   constructor() {
     super("Cannot pick from an empty list"), this.name = "EmptyPickerError";
   }
@@ -9,12 +9,18 @@ class f extends Error {
 function g(s) {
   return typeof s == "object" && s !== null;
 }
+const l = {
+  shift: !1,
+  errorIfEmpty: !0,
+  defaultWeight: 1,
+  weights: void 0
+};
 class p {
-  constructor(t, e) {
+  constructor(t, e = {}) {
     n(this, "items");
     n(this, "options");
     n(this, "weights");
-    this.items = [...t], this.options = e;
+    this.items = [...t], this.options = { ...l, ...e };
     const r = t.length > 0 && g(t[0]);
     if (this.weights = r ? /* @__PURE__ */ new WeakMap() : /* @__PURE__ */ new Map(), e.weights) {
       if (Array.isArray(e.weights))
@@ -41,7 +47,7 @@ class p {
   pick() {
     if (this.items.length === 0) {
       if (this.options.errorIfEmpty)
-        throw new f();
+        throw new a();
       return;
     }
     const t = this.calculateTotalWeight();
@@ -57,7 +63,7 @@ class p {
   }
 }
 export {
-  f as EmptyPickerError,
+  a as EmptyPickerError,
   p as Picker,
   g as isWeakKeyable
 };
