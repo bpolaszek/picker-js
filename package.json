@@ -1,0 +1,60 @@
+{
+  "name": "bentools-picker",
+  "version": "0.0.0",
+  "description": "A TypeScript library for weighted random item selection",
+  "type": "module",
+  "main": "./dist/bentools-picker.umd.cjs",
+  "module": "./dist/bentools-picker.js",
+  "types": "./dist/lib/picker/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/picker/index.d.ts",
+      "import": "./dist/bentools-picker.js",
+      "require": "./dist/bentools-picker.umd.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build",
+    "test": "vitest --run",
+    "lint": "prettier --check \"src/**\" --ignore-unknown",
+    "format": "prettier -w \"src/**\" --ignore-unknown"
+  },
+  "keywords": [
+    "typescript",
+    "random",
+    "picker",
+    "weighted",
+    "selection"
+  ],
+  "author": "Beno!t POLASZEK",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bpolaszek/picker-js"
+  },
+  "bugs": {
+    "url": "https://github.com/bpolaszek/picker-js/issues"
+  },
+  "homepage": "https://github.com/bpolaszek/picker-js#readme",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.2",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^1.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {}
+}
