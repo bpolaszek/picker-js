@@ -20,8 +20,6 @@ npm install bentools-picker
 
 ## Usage
 
-### With Objects
-
 ```typescript
 import { Picker } from 'bentools-picker';
 
@@ -36,51 +34,53 @@ const items = [
   { name: 'Legendary' }
 ];
 
-// Create a WeakMap to store weights (required for objects)
-const weights = new WeakMap<Item, number>();
-weights.set(items[0], 100);  // Common: very high chance
-weights.set(items[1], 50);   // Rare: high chance
-weights.set(items[2], 20);   // Epic: medium chance
-weights.set(items[3], 5);    // Legendary: low chance
+const names = [
+    'Common',
+    'Rare',
+    'Epic',
+    'Legendary',
+];
 
-// Initialize the picker
-const picker = new Picker(items, {
-  shift: false,           // Keep items in the pool after picking
-  errorIfEmpty: true,     // Throw error if the list is empty
-  defaultWeight: 1,       // Weight for items not in the WeakMap
-  weights,                // Our weights WeakMap
-});
-
-// Pick a random item
-const picked = picker.pick();
-console.log(picked.name); // Outputs a random item name based on weights
-```
-
-### With Scalars
-
-```typescript
-import { Picker } from 'bentools-picker';
-
-const items = [1, 2, 3, 4];
-
-// Create a Map to store weights (required for scalars)
-const weights = new Map<number, number>();
-weights.set(1, 100);  // Very high chance
-weights.set(2, 50);   // High chance
-weights.set(3, 20);   // Medium chance
-weights.set(4, 5);    // Low chance
-
-// Initialize the picker
-const picker = new Picker(items, {
+// Method 1: Using array of tuples
+const picker1 = new Picker(items, {
   shift: false,
   errorIfEmpty: true,
   defaultWeight: 1,
-  weights
+  weights: [
+    [items[0], 100],  // Common: very high chance
+    [items[1], 50],   // Rare: high chance
+    [items[2], 20],   // Epic: medium chance
+    [items[3], 5]     // Legendary: low chance
+  ]
 });
 
+// Method 2: Using a record object (only works with scalars)
+const picker2 = new Picker(names, {
+  shift: false,
+  errorIfEmpty: true,
+  defaultWeight: 1,
+  weights: {
+    'Common': 100,  // Common: very high chance
+    'Rare': 50,   // Rare: high chance
+    'Epic': 20,   // Epic: medium chance
+    'Legendary': 5     // Legendary: low chance
+  }
+});
+
+// Method 3: Set weights after initialization
+const picker3 = new Picker(items, {
+  shift: false,
+  errorIfEmpty: true,
+  defaultWeight: 1
+})
+  .setWeight(items[0], 100)
+  .setWeight(items[1], 50)
+  .setWeight(items[2], 20)
+  .setWeight(items[3], 5);
+
 // Pick a random item
-const picked = picker.pick();
-console.log(picked); // Outputs a random number based on weights
+const picked = picker3.pick();
+console.log(picked.name); // Outputs a random item name based on weights
 ```
 
 ### With Item Removal
@@ -90,7 +90,12 @@ const consumablePicker = new Picker(items, {
   shift: true,            // Remove items after picking
   errorIfEmpty: true,     // Throw error when all items are consumed
   defaultWeight: 1,
-  weights
+  weights: [
+    [1, 100],  // Very high chance
+    [2, 50],   // High chance
+    [3, 20],   // Medium chance
+    [4, 5]     // Low chance
+  ]
 });
 
 // Each pick removes the item from the pool
@@ -131,8 +136,10 @@ interface PickerOptions<T> {
   shift: boolean;         // Remove picked items from the pool
   errorIfEmpty: boolean;  // Throw error on empty list
   defaultWeight: number;  // Default weight for items
-  weights: WeightsContainer<T>; // Custom weights for items (WeakMap for objects, Map for scalars)
+  weights?: Weights<T>;   // Optional weights definition (array of tuples or record object)
 }
+
+type Weights<T> = Array<[T, Weight]> | Record<string | number, Weight>;
 ```
 
 #### Methods
@@ -140,6 +147,21 @@ interface PickerOptions<T> {
 ##### `pick(): T | never`
 
 Picks a random item based on weights. May throw `EmptyPickerError` if the list is empty and `errorIfEmpty` is true.
+
+##### `setWeight(item: T, weight: number): this`
+
+Sets the weight for a specific item. Returns the picker instance for method chaining.
+
+```typescript
+// Set weights individually
+picker.setWeight(items[0], 100);
+
+// Or chain multiple calls
+picker
+  .setWeight(items[0], 100)
+  .setWeight(items[1], 50)
+  .setWeight(items[2], 20);
+```
 
 ### Errors
 
@@ -172,8 +194,11 @@ In this case:
 
 ## Best Practices
 
-1. **Memory Management**: Use `WeakMap` for object values to allow garbage collection of removed items.
-2. **Map Type**: Use `Map` for scalar values (numbers, strings, etc.) and `WeakMap` for object values.
+1. **Memory Management**: The library automatically uses `WeakMap` for objects and `Map` for scalar values internally.
+2. **Weight Formats**: Choose the most convenient weight format for your use case:
+   - Array of tuples: Best for type safety and IDE support
+   - Record object: Best for configuration files (remember to use `JSON.stringify` for object keys)
+   - `setWeight` method: Best for dynamic weight updates
 3. **Error Handling**: Always handle `EmptyPickerError` when `errorIfEmpty` is true.
 4. **Weight Distribution**: Use relative weights that make sense for your use case.
 5. **Type Safety**: Leverage TypeScript's type system by properly typing your items.
