@@ -32,6 +32,12 @@ const item = picker.pick(); // Random item with equal weights
 
 ### With Weights
 
+You can set weights in three different ways:
+
+#### 1. Using Array of Tuples
+
+Best for both object and scalar values:
+
 ```typescript
 interface Item {
   name: string;
@@ -44,7 +50,6 @@ const items = [
   { name: 'Legendary' }
 ];
 
-// Method 1: Using array of tuples
 const picker = new Picker(items, {
   weights: [
     [items[0], 100],  // Common: very high chance
@@ -53,23 +58,33 @@ const picker = new Picker(items, {
     [items[3], 5]     // Legendary: low chance
   ]
 });
+```
 
-// Method 2: Using a record object (only for scalar values)
+#### 2. Using Record Object
+
+Only available for scalar values (strings, numbers):
+
+```typescript
 const namePicker = new Picker(['Common', 'Rare', 'Epic', 'Legendary'], {
   weights: {
-    'Common': 100,
-    'Rare': 50,
-    'Epic': 20,
-    'Legendary': 5
+    'Common': 100,    // Very high chance
+    'Rare': 50,       // High chance
+    'Epic': 20,       // Medium chance
+    'Legendary': 5    // Low chance
   }
 });
+```
 
-// Method 3: Set weights after initialization
+#### 3. Using Method Chaining
+
+Useful for setting weights dynamically:
+
+```typescript
 const chainedPicker = new Picker(items)
-  .setWeight(items[0], 100)
-  .setWeight(items[1], 50)
-  .setWeight(items[2], 20)
-  .setWeight(items[3], 5);
+  .setWeight(items[0], 100)  // Common: very high chance
+  .setWeight(items[1], 50)   // Rare: high chance
+  .setWeight(items[2], 20)   // Epic: medium chance
+  .setWeight(items[3], 5);   // Legendary: low chance
 ```
 
 ### With Item Removal
